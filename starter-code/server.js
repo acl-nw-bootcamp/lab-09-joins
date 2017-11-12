@@ -25,7 +25,7 @@ app.get('/new', function(request, response) {
 app.get('/articles', function(request, response) {
   // REVIEW: This query will join the data together from our tables and send it back to the client.
   // TODO: Write a SQL query which joins all data from articles and authors tables on the author_id value of each
-  client.query('SELECT * FROM authors INNER JOIN articles ON authors.author_id = articles.author_id;');
+  client.query('SELECT * FROM authors INNER JOIN articles ON authors.author_id = articles.author_id;')
   .then(function(result) {
     response.send(result.rows);
   })
@@ -80,16 +80,36 @@ app.put('/articles/:id', function(request, response) {
   // an author_id property, so we can reference it from the request.body.
   // TODO: Add the required values from the request as data for the SQL query to interpolate
   client.query(
-    ``,
-    []
+    `UPDATE author
+    SET
+    author=$1, authorUrl=$2
+    WHERE author_id=$3;
+    `,
+    [
+      request.body.author,
+      request.body.authorURL,
+      request.body.author_id
+    ]
   )
   .then(function() {
     // TODO: Write a SQL query to update an article record. Keep in mind that article records
     // now have an author_id, in addition to title, category, publishedOn, and body.
     // TODO: Add the required values from the request as data for the SQL query to interpolate
     client.query(
-      ``,
-      []
+      `UPDATE article
+      SET
+      author_id=$1, title=$2, body=$3, category=$4, "publishedOn"=$5
+      WHERE article_id=$6;
+      `,
+      [
+        request.body.author_id,
+        request.body.title,
+        request.body.body,
+        request.body.category,
+        request.body.publishedOn,
+        request.params.id
+
+      ]
     )
   })
   .then(function() {
