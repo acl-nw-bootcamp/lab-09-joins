@@ -6,7 +6,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const PORT = process.env.PORT || 3000;
 const app = express();
-const conString = '';// TODO: Don't forget to set your own conString
+const conString = 'postgres://postgres@localhost:5432/kilovolt';// TODOne: Don't forget to set your own conString
 const client = new pg.Client(conString);
 client.connect();
 client.on('error', function(error) {
@@ -23,8 +23,10 @@ app.get('/new', function(request, response) {
 
 app.get('/articles', function(request, response) {
   // REVIEW: This query will join the data together from our tables and send it back to the client.
-  // TODO: Write a SQL query which joins all data from articles and authors tables on the author_id value of each
-  client.query(``)
+  // TODOne: Write a SQL query which joins all data from articles and authors tables on the author_id value of each
+  client.query(`SELECT * FROM author, articles
+               INNER JOIN author_id
+                ON authors.author_id=articles.author`)
   .then(function(result) {
     response.send(result.rows);
   })
@@ -34,23 +36,33 @@ app.get('/articles', function(request, response) {
 });
 
 app.post('/articles', function(request, response) {
-  // TODO: Write a SQL query to insert a new author, ON CONFLICT DO NOTHING
-  // TODO: Add author and "authorUrl" as data for the SQL query to interpolate.
+  // TODOne: Write a SQL query to insert a new author, ON CONFLICT DO NOTHING
+  // TODOne: Add author and "authorUrl" as data for the SQL query to interpolate.
   //       Remember that client.query accepts two arguments: your SQL string and
   //       an array of values that it will replace in a 1-to-1 relationship
   //       with our placeholder values, signified with the syntax $1, $2, etc.
   client.query(
-    '',
-    []
+    'INSERT INTO authors (author, "authorUrl") VALUES ($1, $2)',
+    [
+      request.body.author,
+      request.body.authorUrl
+    ]
   )
   .then(function() {
-    // TODO: Write a SQL query to insert a new article, using a sub-query to
+    // TODOne: Write a SQL query to insert a new article, using a sub-query to
     // retrieve the author_id from the authors table. HINT: How might we combine
     // the functionality of a SELECT with VALUES when inserting new rows?
-    // TODO: Add the required values from the request as data for the SQL query to interpolate
+    // TODOne: Add the required values from the request as data for the SQL query to interpolate
     client.query(
-      ``,
-      []
+      `INSERT INTO articles (author_id, title, category, "publishedOn", body)
+      VALUES((SELECT author_id FROM authors WHERE authors.author = $1), $2, $3, $4, $5)`,
+      [
+        request.body.author,
+        request.body.title,
+        request.body.category,
+        request.body.publishedOn,
+        request.body.body
+      ]
     )
   })
   .then(function() {
@@ -62,20 +74,35 @@ app.post('/articles', function(request, response) {
 });
 
 app.put('/articles/:id', function(request, response) {
-  // TODO: Write a SQL query to update an author record. Remember that our articles now have
+  // TODOne: Write a SQL query to update an author record. Remember that our articles now have
   // an author_id property, so we can reference it from the request.body.
-  // TODO: Add the required values from the request as data for the SQL query to interpolate
+  // TODOne: Add the required values from the request as data for the SQL query to interpolate
   client.query(
-    ``,
-    []
+    `UPDATE authors
+    SET
+      author_id=$1, "authorUrl"=$2;
+      `,
+    [
+      request.body.author_id,
+      request.body.authorUrl
+    ]
   )
   .then(function() {
-    // TODO: Write a SQL query to update an article record. Keep in mind that article records
+    // TODOne: Write a SQL query to update an article record. Keep in mind that article records
     // now have an author_id, in addition to title, category, publishedOn, and body.
-    // TODO: Add the required values from the request as data for the SQL query to interpolate
+    // TODOne: Add the required values from the request as data for the SQL query to interpolate
     client.query(
-      ``,
-      []
+      `UPDATE articles
+      SET
+        title=$2, category=$3, "publishedOn"=$4, body=$5,
+      WHERE author_id=$1;
+        `,
+      [
+        request.body.title,
+        request.body.category,
+        request.body.publishedOn,
+        request.body.body
+      ]
     )
   })
   .then(function() {
