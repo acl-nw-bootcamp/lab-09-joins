@@ -54,7 +54,7 @@ app.post('/articles', function(request, response) {
     // the functionality of a SELECT with VALUES when inserting new rows?
     // TODOne: Add the required values from the request as data for the SQL query to interpolate
     client.query(
-      `INSERT INTO articles (author_id, title, category, publishedOn, body)
+      `INSERT INTO articles (author_id, title, category, "publishedOn", body)
       VALUES((SELECT author_id FROM authors WHERE authors.author = $1), $2, $3, $4, $5)`,
       [
         request.body.author,
@@ -74,20 +74,35 @@ app.post('/articles', function(request, response) {
 });
 
 app.put('/articles/:id', function(request, response) {
-  // TODO: Write a SQL query to update an author record. Remember that our articles now have
+  // TODOne: Write a SQL query to update an author record. Remember that our articles now have
   // an author_id property, so we can reference it from the request.body.
-  // TODO: Add the required values from the request as data for the SQL query to interpolate
+  // TODOne: Add the required values from the request as data for the SQL query to interpolate
   client.query(
-    ``,
-    []
+    `UPDATE authors
+    SET
+      author_id=$1, "authorUrl"=$2;
+      `,
+    [
+      request.body.author_id,
+      request.body.authorUrl
+    ]
   )
   .then(function() {
-    // TODO: Write a SQL query to update an article record. Keep in mind that article records
+    // TODOne: Write a SQL query to update an article record. Keep in mind that article records
     // now have an author_id, in addition to title, category, publishedOn, and body.
-    // TODO: Add the required values from the request as data for the SQL query to interpolate
+    // TODOne: Add the required values from the request as data for the SQL query to interpolate
     client.query(
-      ``,
-      []
+      `UPDATE articles
+      SET
+        title=$2, category=$3, "publishedOn"=$4, body=$5,
+      WHERE author_id=$1;
+        `,
+      [
+        request.body.title,
+        request.body.category,
+        request.body.publishedOn,
+        request.body.body
+      ]
     )
   })
   .then(function() {
