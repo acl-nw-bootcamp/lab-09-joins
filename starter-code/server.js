@@ -6,7 +6,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const PORT = process.env.PORT || 3000;
 const app = express();
-const conString = 'postgres://ValerieSiira@localhost:5432/kilovolt';// TODOne: Don't forget to set your own conString
+const conString = 'postgres://postgres@localhost:5432/kilovolt';// TODOne: Don't forget to set your own conString
 const client = new pg.Client(conString);
 client.connect();
 client.on('error', function(error) {
@@ -42,20 +42,27 @@ app.post('/articles', function(request, response) {
   //       an array of values that it will replace in a 1-to-1 relationship
   //       with our placeholder values, signified with the syntax $1, $2, etc.
   client.query(
-    'INSERT INTO authors (author, "authorUrl") VALUES ($2, $3)',
+    'INSERT INTO authors (author, "authorUrl") VALUES ($1, $2)',
     [
       request.body.author,
       request.body.authorUrl
     ]
   )
   .then(function() {
-    // TODO: Write a SQL query to insert a new article, using a sub-query to
+    // TODOne: Write a SQL query to insert a new article, using a sub-query to
     // retrieve the author_id from the authors table. HINT: How might we combine
     // the functionality of a SELECT with VALUES when inserting new rows?
-    // TODO: Add the required values from the request as data for the SQL query to interpolate
+    // TODOne: Add the required values from the request as data for the SQL query to interpolate
     client.query(
-      ``,
-      []
+      `INSERT INTO articles (author_id, title, category, publishedOn, body)
+      VALUES((SELECT author_id FROM authors WHERE authors.author = $1), $2, $3, $4, $5)`,
+      [
+        request.body.author,
+        request.body.title,
+        request.body.category,
+        request.body.publishedOn,
+        request.body.body
+      ]
     )
   })
   .then(function() {
