@@ -6,7 +6,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const PORT = process.env.PORT || 3000;
 const app = express();
-const conString = 'postgres://taylor@localhost:5432/kilovolt';// TODONE: Don't forget to set your own conString
+const conString = 'postgres://wtronvig@localhost:5432/kilovolt';// TODONE: Don't forget to set your own conString
 const client = new pg.Client(conString);
 client.connect();
 client.on('error', function(error) {
@@ -52,8 +52,14 @@ app.post('/articles', function(request, response) {
     // the functionality of a SELECT with VALUES when inserting new rows?
     // TODO: Add the required values from the request as data for the SQL query to interpolate
     client.query(
-      ``,
-      []
+      `INSERT INTO articles(author_id, title, category, publishedOn, body) 
+        VALUES((SELECT author_id FROM authors WHERE author_id = $1), $2, $3, $4, $5)`,
+      [ request.body.author, 
+        request.body.title, 
+        request.body.category,
+        request.body.publishedOn,
+        request.body.body,
+      ] 
     )
   })
   .then(function() {
