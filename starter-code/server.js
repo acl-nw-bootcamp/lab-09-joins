@@ -6,7 +6,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const PORT = process.env.PORT || 3000;
 const app = express();
-const conString = 'postgres://davidchhing@localhost:5432/kilovolt';// TODONE: Don't forget to set your own conString
+const conString = 'postgres://taylor@localhost:5432/kilovolt';// TODONE: Don't forget to set your own conString
 const client = new pg.Client(conString);
 client.connect();
 client.on('error', function(error) {
@@ -24,9 +24,9 @@ app.get('/new', function(request, response) {
 app.get('/articles', function(request, response) {
   // REVIEW: This query will join the data together from our tables and send it back to the client.
   // TODONE: Write a SQL query which joins all data from articles and authors tables on the author_id value of each
-  
+
   client.query(`SELECT articles.*, authors.*
-  FROM articles 
+  FROM articles
   JOIN ON articles.author_id=authors.author_id`)
   .then(function(result) {
     response.send(result.rows);
@@ -37,14 +37,14 @@ app.get('/articles', function(request, response) {
 });
 
 app.post('/articles', function(request, response) {
-  // TODO: Write a SQL query to insert a new author, ON CONFLICT DO NOTHING
-  // TODO: Add author and "authorUrl" as data for the SQL query to interpolate.
+  // TODONE: Write a SQL query to insert a new author, ON CONFLICT DO NOTHING
+  // TODONE: Add author and "authorUrl" as data for the SQL query to interpolate.
   //       Remember that client.query accepts two arguments: your SQL string and
   //       an array of values that it will replace in a 1-to-1 relationship
   //       with our placeholder values, signified with the syntax $1, $2, etc.
   client.query(
-    '',
-    []
+    'INSERT INTO authors(author, "authorUrl") VALUES($1, $2) ON CONFLICT DO NOTHING',
+    [request.body.author, request.body.authorUrl]
   )
   .then(function() {
     // TODO: Write a SQL query to insert a new article, using a sub-query to
