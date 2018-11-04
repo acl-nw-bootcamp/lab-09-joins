@@ -6,7 +6,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const PORT = process.env.PORT || 3000;
 const app = express();
-const conString = 'postgres://localhost:5432/hackerIpsum';// TODO: Don't forget to set your own conString
+const conString = 'postgres://localhost:5432/hackeripsum';// TODO: Don't forget to set your own conString
 const client = new pg.Client(conString);
 client.connect();
 client.on('error', function(error) {
@@ -25,7 +25,7 @@ app.get('/articles', function(request, response) {
   // REVIEW: This query will join the data together from our tables and send it back to the client.
   // TODO: Write a SQL query which joins all data from articles and authors tables on the author_id value of each
   client.query(
-    `SELECT * 
+    `SELECT *
     FROM articles
     JOIN authors
     ON articles.author_id = authors.author_id;`
@@ -44,8 +44,9 @@ app.post('/articles', function(request, response) {
   //       Remember that client.query accepts two arguments: your SQL string and
   //       an array of values that it will replace in a 1-to-1 relationship
   //       with our placeholder values, signified with the syntax $1, $2, etc.
+  console.log('Request.body', request.body);
   client.query(
-    `INSERT INTO authors(author, authorUrl)
+    `INSERT INTO authors(author, "authorUrl")
     VALUES ($1, $2)
     ON CONFLICT DO NOTHING;`,
     [
@@ -59,15 +60,15 @@ app.post('/articles', function(request, response) {
     // the functionality of a SELECT with VALUES when inserting new rows?
     // TODO: Add the required values from the request as data for the SQL query to interpolate
     client.query(
-      `INSERT INTO articles(title, category, body, author_id)
-      VALUES (SELECT $1, $2, $3, author_id)
-      FROM authors
-      WHERE author = $4`,
+      `INSERT INTO articles(title, category, body, "publishedOn", author_id)
+      VALUES ($1, $2, $3, $5, author_id)
+        FROM (SELECT * FROM authors WHERE author = $4)`,
       [
         request.body.title,
         request.body.category,
         request.body.body,
-        request.body.author
+        request.body.author,
+        request.body.publishedOn
       ]
     )
   })
@@ -84,16 +85,29 @@ app.put('/articles/:id', function(request, response) {
   // an author_id property, so we can reference it from the request.body.
   // TODO: Add the required values from the request as data for the SQL query to interpolate
   client.query(
-    ``,
-    []
+    `UPDATE authors
+    SET author = $1, authorUrl = $2
+    WHERE author_id = $3`,
+    [
+      request.body.author,
+      request.body.authorUrl,
+      request.body.author_id
+    ]
   )
   .then(function() {
     // TODO: Write a SQL query to update an article record. Keep in mind that article records
     // now have an author_id, in addition to title, category, publishedOn, and body.
     // TODO: Add the required values from the request as data for the SQL query to interpolate
     client.query(
-      ``,
-      []
+      `UPDATE articles
+      SET title = $1, category = $2, publishedOn = $3, body = $4
+      WHERE articles.author_id = authors.author_id`,
+      [
+        request.body.title,
+        request.body.category,
+        request.body.publishedOn,
+        request.body.body
+      ]
     )
   })
   .then(function() {
