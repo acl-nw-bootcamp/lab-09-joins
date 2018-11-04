@@ -61,8 +61,7 @@ app.post('/articles', function(request, response) {
     // TODO: Add the required values from the request as data for the SQL query to interpolate
     client.query(
       `INSERT INTO articles(title, category, body, "publishedOn", author_id)
-      VALUES ($1, $2, $3, $5, author_id)
-        FROM (SELECT * FROM authors WHERE author = $4)`,
+      VALUES ($1, $2, $3, $5, (SELECT author_id FROM authors WHERE author = $4))`,
       [
         request.body.title,
         request.body.category,
