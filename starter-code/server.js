@@ -40,13 +40,19 @@ app.get('/articles', function(request, response) {
 
 app.post('/articles', function(request, response) {
   // TODO: Write a SQL query to insert a new author, ON CONFLICT DO NOTHING
+
   // TODO: Add author and "authorUrl" as data for the SQL query to interpolate.
   //       Remember that client.query accepts two arguments: your SQL string and
   //       an array of values that it will replace in a 1-to-1 relationship
   //       with our placeholder values, signified with the syntax $1, $2, etc.
   client.query(
-    '',
-    []
+    `INSERT INTO authors (author,"authorUrl")
+    VALUES ($1, $2)
+    ON CONFLICT DO NOTHING`,
+    [
+      request.body.author,
+      request.body.authorURL
+    ]
   )
   .then(function() {
     // TODO: Write a SQL query to insert a new article, using a sub-query to
@@ -54,8 +60,20 @@ app.post('/articles', function(request, response) {
     // the functionality of a SELECT with VALUES when inserting new rows?
     // TODO: Add the required values from the request as data for the SQL query to interpolate
     client.query(
-      ``,
-      []
+      `INSERT INTO articles (author_id, title, category, "publishedOn", body)
+      VALUES ( 
+        SELECT author_id, $2, $3, $4, $5 
+        FROM authors
+        WHERE author = $1
+      )`
+      ,
+      [
+      request.body.author,
+      request.body.title,
+      request.body.category,
+      request.body.publishedOn,
+      request.body.body,
+    ]
     )
   })
   .then(function() {
